@@ -14,12 +14,12 @@ timezone: Asia/Seoul
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: 지현의 개발 노트 # the main title
+title: 지현 개발 로그 # the main title
 
-tagline: 프론트도 가능한 백엔드 개발자로 가는 기록 # it will display as the subtitle
+tagline: 백엔드 신입 개발자로 가는 기록 # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
-  Java · Spring · JPA 학습과 프로젝트 기록. 설명할 수 있는 코드를 목표로.
+  크래프톤 정글 수료 후 Java·Spring으로 백엔드를 준비하는 기록.
 
 # Fill in the protocol & hostname for your site.
 # E.g. 'https://username.github.io', note that it does not end with a '/'.
@@ -88,7 +88,7 @@ pageviews:
 #     light — Use the light color scheme
 #     dark — Use the dark color scheme
 #
-theme_mode: # [light | dark]
+theme_mode: light # [light | dark]
 
 # The CDN endpoint for media resources.
 # Notice that once it is assigned, the CDN url
