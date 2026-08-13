@@ -1,0 +1,81 @@
+---
+---
+
+@use 'abstracts/variables' with (
+  $theme: '{{ site.theme_mode }}'
+);
+
+/* prettier-ignore */
+@use 'main
+{%- if jekyll.environment == 'production' -%}
+  .bundle
+{%- endif -%}
+';
+
+/* append your custom style below */
+
+/*
+ * 사이드바 카테고리 목록 (_includes/sidebar.html 에서 직접 추가한 블록용).
+ * 이 파일을 지우면 테마 기본 스타일로 돌아간다.
+ */
+
+#sidebar {
+  /* 카테고리가 늘어나면 사이드바 아래가 잘리므로 nav 안에서 스크롤되게 한다 */
+  nav {
+    overflow-y: auto;
+  }
+}
+
+.sidebar-categories {
+  .sidebar-categories-title {
+    font-size: 0.8rem;
+    letter-spacing: 0.05rem;
+    opacity: 0.6;
+  }
+
+  /* 카테고리 이름 + 펼침 화살표를 한 줄에 */
+  .sidebar-category-row {
+    display: flex;
+    align-items: center;
+
+    > .nav-link {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  .sidebar-category-count {
+    margin-left: 0.3rem;
+    font-size: 0.75em;
+    opacity: 0.6;
+  }
+
+  /* 하위 분류가 있을 때만 붙는 화살표. 펼치면 90도 돈다 */
+  .sidebar-category-trigger {
+    flex: 0 0 auto;
+    padding: 0 0.9rem 0 0.2rem;
+    opacity: 0.5;
+    text-decoration: none;
+
+    > i {
+      transition: transform 0.2s ease-in-out;
+    }
+
+    &:not(.collapsed) > i {
+      transform: rotate(90deg);
+    }
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  .sidebar-subcategory-wrapper {
+    width: 100%;
+
+    .nav-link {
+      padding-left: 2.2rem;
+      font-size: 0.92em;
+    }
+  }
+}

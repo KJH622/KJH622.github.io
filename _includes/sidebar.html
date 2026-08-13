@@ -44,23 +44,78 @@
       {% endfor %}
     </ul>
 
-    <!-- ▼ 여기부터 직접 추가한 블록 — 카테고리 목록 -->
+    <!-- ▼ 여기부터 직접 추가한 블록 — 카테고리 목록 (2단 계층 + 접기/펼치기) -->
+    <!-- 상위/하위 판별 로직은 Chirpy 의 _layouts/categories.html 과 동일하다. -->
     {% assign sidebar_categories = site.categories | sort %}
     {% if sidebar_categories.size > 0 %}
-      <ul class="nav mt-3 pt-3 border-top">
+      <ul class="nav sidebar-categories mt-3 pt-3 border-top">
         <li class="nav-item">
-          <span class="nav-link text-muted" style="font-size: 0.8rem; letter-spacing: 0.05rem;">카테고리</span>
+          <span class="nav-link sidebar-categories-title">카테고리</span>
         </li>
+
+        {% assign sb_group_index = 0 %}
         {% for category in sidebar_categories %}
           {% assign category_name = category | first %}
-          {% assign posts_size = category | last | size %}
-          {% capture _sidebar_ctg_url %}/categories/{{ category_name | slugify | url_encode }}/{% endcapture %}
-          <li class="nav-item">
-            <a href="{{ _sidebar_ctg_url | relative_url }}" class="nav-link">
-              <i class="fa-fw far fa-folder"></i>
-              <span>{{ category_name }}<small class="text-muted ms-1">({{ posts_size }})</small></span>
-            </a>
-          </li>
+          {% assign posts_of_category = category | last %}
+          {% assign first_post = posts_of_category | first %}
+
+          {%- comment -%} 상위 카테고리인 글에서만 항목을 만든다 (하위는 아래에서 따로 그린다) {%- endcomment -%}
+          {% if category_name == first_post.categories[0] %}
+            {%- comment -%} 이 카테고리에 달린 하위 카테고리를 모은다 {%- endcomment -%}
+            {% assign sub_categories = '' | split: '' %}
+            {% for post in posts_of_category %}
+              {% assign second_category = post.categories[1] %}
+              {% if second_category %}
+                {% unless sub_categories contains second_category %}
+                  {% assign sub_categories = sub_categories | push: second_category %}
+                {% endunless %}
+              {% endif %}
+            {% endfor %}
+            {% assign sub_categories = sub_categories | sort %}
+            {% assign sub_categories_size = sub_categories | size %}
+
+            {% capture _sb_ctg_url %}/categories/{{ category_name | slugify | url_encode }}/{% endcapture %}
+            {% assign _sb_posts_size = posts_of_category | size %}
+
+            <li class="nav-item sidebar-category-row">
+              <a href="{{ _sb_ctg_url | relative_url }}" class="nav-link">
+                <i class="fa-fw far fa-folder{% if sub_categories_size > 0 %}-open{% endif %}"></i>
+                <span>{{ category_name }}<small class="sidebar-category-count">({{ _sb_posts_size }})</small></span>
+              </a>
+
+              {% if sub_categories_size > 0 %}
+                <a
+                  href="#sb_ctg_{{ sb_group_index }}"
+                  class="sidebar-category-trigger collapsed"
+                  data-bs-toggle="collapse"
+                  role="button"
+                  aria-expanded="false"
+                  aria-label="{{ category_name }} 하위 분류 펼치기"
+                >
+                  <i class="fas fa-fw fa-angle-right"></i>
+                </a>
+              {% endif %}
+            </li>
+
+            {% if sub_categories_size > 0 %}
+              <li class="nav-item sidebar-subcategory-wrapper">
+                <ul class="nav collapse" id="sb_ctg_{{ sb_group_index }}">
+                  {% for sub_category in sub_categories %}
+                    {% capture _sb_sub_url %}/categories/{{ sub_category | slugify | url_encode }}/{% endcapture %}
+                    {% assign _sb_sub_size = site.categories[sub_category] | size %}
+                    <li class="nav-item">
+                      <a href="{{ _sb_sub_url | relative_url }}" class="nav-link">
+                        <i class="fa-fw far fa-folder"></i>
+                        <span>{{ sub_category }}<small class="sidebar-category-count">({{ _sb_sub_size }})</small></span>
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </li>
+            {% endif %}
+
+            {% assign sb_group_index = sb_group_index | plus: 1 %}
+          {% endif %}
         {% endfor %}
       </ul>
     {% endif %}
