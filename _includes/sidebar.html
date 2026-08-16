@@ -1,8 +1,17 @@
 <!-- The Side Bar -->
 <!--
-  Chirpy v7.6.0 의 _includes/sidebar.html 을 복사해 「카테고리 목록」 블록만 덧붙인 것.
+  Chirpy v7.6.0 의 _includes/sidebar.html 을 복사해 고친 것.
+
+  바꾼 것 (2026-08-17) — russee.tistory.com 사이드바를 기준으로 잡았다.
+    1. 순서를  홈 → 분류 전체보기 + 목록 → 메뉴(태그·아카이브·정보)  로 바꿨다.
+       분류가 탭 네 개 아래로 밀려서 한눈에 안 들어왔다.
+    2. 「분류 전체보기」머리글이 /categories/ 페이지 링크를 겸한다.
+       그래서 아래 탭 루프에서 카테고리 탭을 뺐다 — 안 그러면 "카테고리"가 두 번 나온다.
+    3. 폴더 아이콘을 없애고 「이름 … 개수」만 남겼다.
+
   테마를 올릴 때 원본이 바뀌면 이 파일이 낡을 수 있다.
   깨지면 이 파일을 지우기만 하면 기본 사이드바로 돌아온다.
+  같이 봐야 하는 곳: assets/css/jekyll-theme-chirpy.scss 의 .sidebar-categories 블록
 -->
 
 <aside aria-label="Sidebar" id="sidebar" class="d-flex flex-column align-items-end">
@@ -30,8 +39,115 @@
           <span>{{ site.data.locales[include.lang].tabs.home | upcase }}</span>
         </a>
       </li>
-      <!-- the real tabs -->
+    </ul>
+
+    <!-- ▼ 여기부터 직접 추가한 블록 — 분류 목록 (2단 계층 + 접기/펼치기) -->
+    <!--
+      상위/하위 판별 로직은 Chirpy 의 _layouts/categories.html 과 동일하다.
+      머리글 「분류 전체보기」가 /categories/ 페이지로 가는 링크라서
+      아래 「메뉴」 묶음에서는 카테고리 탭을 뺀다 (같은 곳으로 가는 링크가 둘이 되지 않게).
+    -->
+    {% assign sidebar_categories = site.categories | sort %}
+    <ul class="nav sidebar-categories">
+      <li class="nav-item{% if page.url == '/categories/' %}{{ " active" }}{% endif %}">
+        <a href="{{ '/categories/' | relative_url }}" class="nav-link sidebar-section-head">
+          <span class="sidebar-category-name">분류 전체보기</span>
+          <span class="sidebar-category-count">{{ site.posts | size }}</span>
+        </a>
+      </li>
+
+      {% assign sb_group_index = 0 %}
+      {% for category in sidebar_categories %}
+        {% assign category_name = category | first %}
+        {% assign posts_of_category = category | last %}
+        {% assign first_post = posts_of_category | first %}
+
+        {%- comment -%} 상위 카테고리인 글에서만 항목을 만든다 (하위는 아래에서 따로 그린다) {%- endcomment -%}
+        {% if category_name == first_post.categories[0] %}
+          {%- comment -%} 이 카테고리에 달린 하위 카테고리를 모은다 {%- endcomment -%}
+          {% assign sub_categories = '' | split: '' %}
+          {% for post in posts_of_category %}
+            {% assign second_category = post.categories[1] %}
+            {% if second_category %}
+              {% unless sub_categories contains second_category %}
+                {% assign sub_categories = sub_categories | push: second_category %}
+              {% endunless %}
+            {% endif %}
+          {% endfor %}
+          {% assign sub_categories = sub_categories | sort %}
+          {% assign sub_categories_size = sub_categories | size %}
+
+          {%- comment -%}
+            _sb_ctg_path 는 화면 비교용(한글 그대로), _sb_ctg_url 은 주소용(퍼센트 인코딩).
+            page.url 은 Jekyll 이 인코딩하지 않고 한글 그대로 주므로 path 쪽과 비교해야 맞는다.
+          {%- endcomment -%}
+          {% capture _sb_ctg_path %}/categories/{{ category_name | slugify }}/{% endcapture %}
+          {% capture _sb_ctg_url %}/categories/{{ category_name | slugify | url_encode }}/{% endcapture %}
+          {% assign _sb_posts_size = posts_of_category | size %}
+
+          {%- comment -%} 하위 중 하나를 보고 있으면 그 상위 묶음을 펼친 채로 그린다 {%- endcomment -%}
+          {% assign _sb_sub_open = false %}
+          {% for sub_category in sub_categories %}
+            {% capture _sb_sub_path %}/categories/{{ sub_category | slugify }}/{% endcapture %}
+            {% if page.url == _sb_sub_path %}
+              {% assign _sb_sub_open = true %}
+            {% endif %}
+          {% endfor %}
+
+          <li class="nav-item sidebar-category-row{% if page.url == _sb_ctg_path %}{{ " active" }}{% endif %}">
+            <a href="{{ _sb_ctg_url | relative_url }}" class="nav-link">
+              <span class="sidebar-category-name">{{ category_name }}</span>
+              <span class="sidebar-category-count">{{ _sb_posts_size }}</span>
+            </a>
+
+            {% if sub_categories_size > 0 %}
+              <a
+                href="#sb_ctg_{{ sb_group_index }}"
+                class="sidebar-category-trigger{% unless _sb_sub_open %}{{ " collapsed" }}{% endunless %}"
+                data-bs-toggle="collapse"
+                role="button"
+                aria-expanded="{% if _sb_sub_open %}true{% else %}false{% endif %}"
+                aria-label="{{ category_name }} 하위 분류 펼치기"
+              >
+                <i class="fas fa-fw fa-angle-right"></i>
+              </a>
+            {% endif %}
+          </li>
+
+          {% if sub_categories_size > 0 %}
+            <li class="nav-item sidebar-subcategory-wrapper">
+              <ul class="nav collapse{% if _sb_sub_open %}{{ " show" }}{% endif %}" id="sb_ctg_{{ sb_group_index }}">
+                {% for sub_category in sub_categories %}
+                  {% capture _sb_sub_path %}/categories/{{ sub_category | slugify }}/{% endcapture %}
+                  {% capture _sb_sub_url %}/categories/{{ sub_category | slugify | url_encode }}/{% endcapture %}
+                  {% assign _sb_sub_size = site.categories[sub_category] | size %}
+                  <li class="nav-item{% if page.url == _sb_sub_path %}{{ " active" }}{% endif %}">
+                    <a href="{{ _sb_sub_url | relative_url }}" class="nav-link">
+                      <span class="sidebar-category-name">{{ sub_category }}</span>
+                      <span class="sidebar-category-count">{{ _sb_sub_size }}</span>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </li>
+          {% endif %}
+
+          {% assign sb_group_index = sb_group_index | plus: 1 %}
+        {% endif %}
+      {% endfor %}
+    </ul>
+    <!-- ▲ 분류 목록 끝 -->
+
+    <ul class="nav sidebar-menu">
+      <li class="nav-item sidebar-section-label">
+        <span>메뉴</span>
+      </li>
+      <!-- the real tabs — 카테고리 탭은 위 「분류 전체보기」가 대신한다 -->
       {% for tab in site.tabs %}
+        {% if tab.url == '/categories/' %}
+          {% continue %}
+        {% endif %}
+
         <li class="nav-item{% if tab.url == page.url %}{{ " active" }}{% endif %}">
           <a href="{{ tab.url | relative_url }}" class="nav-link">
             <i class="fa-fw {{ tab.icon }}"></i>
@@ -43,83 +159,6 @@
         <!-- .nav-item -->
       {% endfor %}
     </ul>
-
-    <!-- ▼ 여기부터 직접 추가한 블록 — 카테고리 목록 (2단 계층 + 접기/펼치기) -->
-    <!-- 상위/하위 판별 로직은 Chirpy 의 _layouts/categories.html 과 동일하다. -->
-    {% assign sidebar_categories = site.categories | sort %}
-    {% if sidebar_categories.size > 0 %}
-      <ul class="nav sidebar-categories mt-3 pt-3 border-top">
-        <li class="nav-item">
-          <span class="nav-link sidebar-categories-title">카테고리</span>
-        </li>
-
-        {% assign sb_group_index = 0 %}
-        {% for category in sidebar_categories %}
-          {% assign category_name = category | first %}
-          {% assign posts_of_category = category | last %}
-          {% assign first_post = posts_of_category | first %}
-
-          {%- comment -%} 상위 카테고리인 글에서만 항목을 만든다 (하위는 아래에서 따로 그린다) {%- endcomment -%}
-          {% if category_name == first_post.categories[0] %}
-            {%- comment -%} 이 카테고리에 달린 하위 카테고리를 모은다 {%- endcomment -%}
-            {% assign sub_categories = '' | split: '' %}
-            {% for post in posts_of_category %}
-              {% assign second_category = post.categories[1] %}
-              {% if second_category %}
-                {% unless sub_categories contains second_category %}
-                  {% assign sub_categories = sub_categories | push: second_category %}
-                {% endunless %}
-              {% endif %}
-            {% endfor %}
-            {% assign sub_categories = sub_categories | sort %}
-            {% assign sub_categories_size = sub_categories | size %}
-
-            {% capture _sb_ctg_url %}/categories/{{ category_name | slugify | url_encode }}/{% endcapture %}
-            {% assign _sb_posts_size = posts_of_category | size %}
-
-            <li class="nav-item sidebar-category-row">
-              <a href="{{ _sb_ctg_url | relative_url }}" class="nav-link">
-                <i class="fa-fw far fa-folder{% if sub_categories_size > 0 %}-open{% endif %}"></i>
-                <span>{{ category_name }}<small class="sidebar-category-count">({{ _sb_posts_size }})</small></span>
-              </a>
-
-              {% if sub_categories_size > 0 %}
-                <a
-                  href="#sb_ctg_{{ sb_group_index }}"
-                  class="sidebar-category-trigger collapsed"
-                  data-bs-toggle="collapse"
-                  role="button"
-                  aria-expanded="false"
-                  aria-label="{{ category_name }} 하위 분류 펼치기"
-                >
-                  <i class="fas fa-fw fa-angle-right"></i>
-                </a>
-              {% endif %}
-            </li>
-
-            {% if sub_categories_size > 0 %}
-              <li class="nav-item sidebar-subcategory-wrapper">
-                <ul class="nav collapse" id="sb_ctg_{{ sb_group_index }}">
-                  {% for sub_category in sub_categories %}
-                    {% capture _sb_sub_url %}/categories/{{ sub_category | slugify | url_encode }}/{% endcapture %}
-                    {% assign _sb_sub_size = site.categories[sub_category] | size %}
-                    <li class="nav-item">
-                      <a href="{{ _sb_sub_url | relative_url }}" class="nav-link">
-                        <i class="fa-fw far fa-folder"></i>
-                        <span>{{ sub_category }}<small class="sidebar-category-count">({{ _sb_sub_size }})</small></span>
-                      </a>
-                    </li>
-                  {% endfor %}
-                </ul>
-              </li>
-            {% endif %}
-
-            {% assign sb_group_index = sb_group_index | plus: 1 %}
-          {% endif %}
-        {% endfor %}
-      </ul>
-    {% endif %}
-    <!-- ▲ 카테고리 목록 끝 -->
   </nav>
 
   <div class="sidebar-bottom d-flex flex-wrap align-items-center w-100">

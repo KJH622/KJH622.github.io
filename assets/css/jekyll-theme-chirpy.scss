@@ -15,67 +15,178 @@
 /* append your custom style below */
 
 /*
- * 사이드바 카테고리 목록 (_includes/sidebar.html 에서 직접 추가한 블록용).
+ * 사이드바 분류 목록 (_includes/sidebar.html 에서 직접 추가한 블록용).
  * 이 파일을 지우면 테마 기본 스타일로 돌아간다.
+ *
+ * 색은 전부 Chirpy 가 이미 만들어둔 변수를 쓴다. 직접 색을 적으면 라이트 모드에서 안 보인다.
+ *   --sidebar-muted-color   흐린 글자
+ *   --sidebar-active-color  지금 보고 있는 것
+ *   --sidebar-hover-bg      마우스 올렸을 때 배경
+ *
+ * 테마 기본값 중 여기서 되돌리는 것 (Chirpy 7.6 기준)
+ *   #sidebar ul                              margin-bottom: 2rem
+ *   #sidebar ul li.nav-item                  padding: 0 1.5rem  (1650px 이상은 2.75rem)
+ *   #sidebar ul li.nav-item a.nav-link       padding: .6rem 0 / font-weight: 600
+ *   #sidebar ul li.nav-item a.nav-link span  font-size: 90%
+ *   #sidebar ul li.nav-item:not(:first-child) margin-top: .25rem
  */
 
 #sidebar {
-  /* 카테고리가 늘어나면 사이드바 아래가 잘리므로 nav 안에서 스크롤되게 한다 */
+  /*
+   * 분류가 늘어나면 사이드바 아래가 잘리므로 nav 안에서만 스크롤되게 한다.
+   * (프로필과 맨 아래 테마 토글은 제자리에 두고 목록만 움직인다)
+   * 스크롤바는 숨기지 않는다 — 숨기면 아래에 더 있다는 걸 알 방법이 없다.
+   */
   nav {
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sidebar-border-color) transparent;
+
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--sidebar-border-color);
+      border-radius: 3px;
+    }
+
+    /* ul 이 셋(홈 / 분류 / 메뉴)으로 나뉘었다. 기본 2rem 을 끄고 아래에서 따로 띄운다 */
+    > ul {
+      margin-bottom: 0;
+    }
   }
-}
 
-.sidebar-categories {
-  .sidebar-categories-title {
-    font-size: 0.8rem;
-    letter-spacing: 0.05rem;
-    opacity: 0.6;
+  /* 묶음과 묶음 사이. 선을 긋지 않고 여백으로만 나눈다 */
+  .sidebar-categories,
+  .sidebar-menu {
+    margin-top: 1.5rem;
   }
 
-  /* 카테고리 이름 + 펼침 화살표를 한 줄에 */
-  .sidebar-category-row {
-    display: flex;
-    align-items: center;
+  .sidebar-menu {
+    padding-bottom: 1rem;
+  }
 
-    > .nav-link {
+  /*
+   * 아래 선택자가 길고 장황해 보이는 이유
+   * ─ Chirpy 기본 규칙이 `#sidebar ul li.nav-item a.nav-link span` 처럼 이미 길다.
+   *   CSS 는 더 자세히 적은 쪽이 이긴다. 짧게 쓰면 글자 크기가 그냥 안 먹는다.
+   *   !important 로 때우지 않고 같은 수준까지 적어서 이긴다.
+   */
+
+  /* 「메뉴」 — 링크가 아닌 그냥 라벨 */
+  .sidebar-section-label {
+    padding-top: 0.35rem;
+    padding-bottom: 0.2rem;
+
+    > span {
+      font-size: 0.78rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      color: var(--sidebar-muted-color);
+    }
+  }
+
+  .sidebar-categories {
+    /* 분류는 목록이라 버튼처럼 굵고 넓게 두면 답답하다. 줄 간격을 절반으로 */
+    li.nav-item a.nav-link {
+      padding-top: 0.28rem;
+      padding-bottom: 0.28rem;
+      font-weight: 400;
+    }
+
+    li.nav-item:not(:first-child) {
+      margin-top: 0;
+    }
+
+    /* 「분류 전체보기」 — 목록의 머리글이면서 /categories/ 로 가는 링크 */
+    li.nav-item:first-child {
+      margin-bottom: 0.15rem;
+    }
+
+    li.nav-item a.nav-link.sidebar-section-head span.sidebar-category-name {
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
+    }
+
+    li.nav-item a.nav-link span.sidebar-category-name {
       flex: 1 1 auto;
       min-width: 0;
-    }
-  }
-
-  .sidebar-category-count {
-    margin-left: 0.3rem;
-    font-size: 0.75em;
-    opacity: 0.6;
-  }
-
-  /* 하위 분류가 있을 때만 붙는 화살표. 펼치면 90도 돈다 */
-  .sidebar-category-trigger {
-    flex: 0 0 auto;
-    padding: 0 0.9rem 0 0.2rem;
-    opacity: 0.5;
-    text-decoration: none;
-
-    > i {
-      transition: transform 0.2s ease-in-out;
+      font-size: 0.88rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    &:not(.collapsed) > i {
-      transform: rotate(90deg);
+    /* 개수는 줄 오른쪽 끝에 */
+    li.nav-item a.nav-link span.sidebar-category-count {
+      flex: 0 0 auto;
+      margin-left: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--sidebar-muted-color);
     }
 
-    &:hover {
-      opacity: 0.9;
+    li.nav-item.active a.nav-link {
+      font-weight: 600;
     }
-  }
 
-  .sidebar-subcategory-wrapper {
-    width: 100%;
+    li.nav-item.active a.nav-link span.sidebar-category-count {
+      color: var(--sidebar-active-color);
+    }
 
-    .nav-link {
-      padding-left: 2.2rem;
-      font-size: 0.92em;
+    /* 분류 이름 + 펼침 화살표를 한 줄에 */
+    li.nav-item.sidebar-category-row {
+      display: flex;
+      align-items: center;
+
+      > a.nav-link {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+    }
+
+    /* 하위 분류가 있을 때만 붙는 화살표. 펼치면 90도 돈다 */
+    .sidebar-category-trigger {
+      flex: 0 0 auto;
+      padding: 0.2rem 0 0.2rem 0.4rem;
+      opacity: 0.5;
+      text-decoration: none;
+
+      > i {
+        font-size: 0.8rem;
+        transition: transform 0.2s ease-in-out;
+      }
+
+      &:not(.collapsed) > i {
+        transform: rotate(90deg);
+      }
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    /* 하위 목록은 껍데기 li 의 좌우 여백을 끄고, 안쪽 링크만 들여쓴다 */
+    li.nav-item.sidebar-subcategory-wrapper {
+      width: 100%;
+      padding-left: 0;
+      padding-right: 0;
+
+      > ul {
+        margin-bottom: 0;
+      }
+
+      /*
+       * 링크 왼쪽 여백은 Bootstrap .nav-link 기본값이 1rem 이다.
+       * 여기에 1rem 을 더해 상위 분류보다 딱 한 칸 안쪽에서 시작하게 한다.
+       */
+      li.nav-item a.nav-link {
+        padding-left: 2rem;
+      }
+
+      li.nav-item a.nav-link span.sidebar-category-name {
+        font-size: 0.83rem;
+      }
     }
   }
 }
