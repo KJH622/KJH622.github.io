@@ -78,23 +78,35 @@
           {% assign sub_categories_size = sub_categories | size %}
 
           {%- comment -%}
-            _sb_ctg_path 는 화면 비교용(한글 그대로), _sb_ctg_url 은 주소용(퍼센트 인코딩).
-            page.url 은 Jekyll 이 인코딩하지 않고 한글 그대로 주므로 path 쪽과 비교해야 맞는다.
+            주소를 두 벌 만든다.
+              _sb_ctg_url  퍼센트 인코딩한 것 — 한글 분류명이 주소에서 안 깨지게. href 에 쓴다.
+              _sb_ctg_path 한글 그대로인 것 — 비교용.
+
+            「지금 이 분류를 보고 있는가」를 판단하려고 page.url 과 견주는데,
+            Jekyll 버전에 따라 page.url 이 인코딩된 채로 오기도 하고 한글 그대로 오기도 한다.
+            (2026-08-17 확인: 이 블로그는 인코딩된 쪽 — /categories/%ED%9A%8C%EA%B3%A0/)
+            어느 쪽이 와도 맞도록 둘 다 견준다.
           {%- endcomment -%}
           {% capture _sb_ctg_path %}/categories/{{ category_name | slugify }}/{% endcapture %}
           {% capture _sb_ctg_url %}/categories/{{ category_name | slugify | url_encode }}/{% endcapture %}
           {% assign _sb_posts_size = posts_of_category | size %}
 
+          {% assign _sb_ctg_here = false %}
+          {% if page.url == _sb_ctg_path or page.url == _sb_ctg_url %}
+            {% assign _sb_ctg_here = true %}
+          {% endif %}
+
           {%- comment -%} 하위 중 하나를 보고 있으면 그 상위 묶음을 펼친 채로 그린다 {%- endcomment -%}
           {% assign _sb_sub_open = false %}
           {% for sub_category in sub_categories %}
             {% capture _sb_sub_path %}/categories/{{ sub_category | slugify }}/{% endcapture %}
-            {% if page.url == _sb_sub_path %}
+            {% capture _sb_sub_url %}/categories/{{ sub_category | slugify | url_encode }}/{% endcapture %}
+            {% if page.url == _sb_sub_path or page.url == _sb_sub_url %}
               {% assign _sb_sub_open = true %}
             {% endif %}
           {% endfor %}
 
-          <li class="nav-item sidebar-category-row{% if page.url == _sb_ctg_path %}{{ " active" }}{% endif %}">
+          <li class="nav-item sidebar-category-row{% if _sb_ctg_here %}{{ " active" }}{% endif %}">
             <a href="{{ _sb_ctg_url | relative_url }}" class="nav-link">
               <span class="sidebar-category-name">{{ category_name }}</span>
               <span class="sidebar-category-count">{{ _sb_posts_size }}</span>
@@ -121,7 +133,7 @@
                   {% capture _sb_sub_path %}/categories/{{ sub_category | slugify }}/{% endcapture %}
                   {% capture _sb_sub_url %}/categories/{{ sub_category | slugify | url_encode }}/{% endcapture %}
                   {% assign _sb_sub_size = site.categories[sub_category] | size %}
-                  <li class="nav-item{% if page.url == _sb_sub_path %}{{ " active" }}{% endif %}">
+                  <li class="nav-item{% if page.url == _sb_sub_path or page.url == _sb_sub_url %}{{ " active" }}{% endif %}">
                     <a href="{{ _sb_sub_url | relative_url }}" class="nav-link">
                       <span class="sidebar-category-name">{{ sub_category }}</span>
                       <span class="sidebar-category-count">{{ _sb_sub_size }}</span>
