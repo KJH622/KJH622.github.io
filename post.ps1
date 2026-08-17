@@ -1,13 +1,14 @@
 ﻿# 새 글 뼈대를 만든다.
 #
 #   .\post.ps1 week-3 "W3 회고 - 자바 입문을 끝냈다" WIL
-#   .\post.ps1 week1-essay "WEEK 1. 에세이" WIL 정글 -Date 2026-03-07
-#                                           ↑상위 ↑하위      ↑원본 날짜
+#   .\post.ps1 malloc-macro "malloc 매크로" Krafton-Jungle malloc -Date 2026-04-14
+#                                           ↑상위          ↑하위      ↑원본 날짜
 #
 # 이 스크립트가 막아주는 것 (전부 실제로 겪었거나 겪을 뻔한 사고다)
 #   1) date 를 미래로 적으면 글이 아예 안 올라간다  -> 미래 날짜를 거부한다
 #   2) 파일명에 한글을 쓰면 주소가 깨진다            -> 영문 슬러그만 받는다
-#   3) 상위와 하위에 같은 이름을 쓰면 사이드바에서 그 줄이 사라졌다 나타났다 한다
+#   3) 상위 분류 이름을 하위로 쓰면 사이드바가 깨진다
+#      예) [Krafton-Jungle, WIL] 은 WIL 이 자기 자신의 하위로 들어간다 (WIL > WIL)
 #      -> 같은 이름이거나 하위에 상위 이름을 쓰면 멈춘다
 
 [CmdletBinding()]
@@ -31,9 +32,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# 카테고리는 여섯 개뿐이다. 늘리면 사이드바가 목록이 되어버린다.
+# 카테고리는 일곱 개뿐이다. 늘리면 사이드바가 목록이 되어버린다.
 # 이 검사는 상위에만 건다 — 하위는 「필요해지면 그때 붙인다」로 정해뒀다.
-$AllowedCategories = @('WIL', 'Java', 'Spring', '프로젝트', 'CS', '회고')
+# Krafton-Jungle 은 20편에서 멈추는 아카이브라 예외로 뒀다 (2026-08-17 추가).
+$AllowedCategories = @('WIL', 'Java', 'Spring', '프로젝트', 'CS', '회고', 'Krafton-Jungle')
 
 # --- 1. 슬러그 검사 (영문 소문자 / 숫자 / 하이픈) ---------------------------
 if ($Slug -notmatch '^[a-z0-9]+(-[a-z0-9]+)*$') {
@@ -65,8 +67,8 @@ if ($SubCategory -and $SubCategory -eq $Category) {
 if ($SubCategory -and $AllowedCategories -contains $SubCategory) {
     Write-Host ""
     Write-Host "'$SubCategory' 는 상위 분류 이름입니다. 하위로는 쓸 수 없습니다." -ForegroundColor Red
-    Write-Host "  같은 이름을 상위와 하위에 섞으면 사이드바에서 그 줄이 사라졌다 나타났다 합니다."
-    Write-Host "  Chirpy 가 「그 이름의 가장 최근 글이 상위로 썼는가」로 판단하기 때문입니다."
+    Write-Host "  사이드바가 그 이름을 자기 자신의 하위로 그립니다 ($SubCategory > $SubCategory)."
+    Write-Host "  하위를 모을 때 categories[1] 을 긁어모으는데, 그 글이 상위 목록에도 들어가기 때문입니다."
     Write-Host ""
     exit 1
 }
