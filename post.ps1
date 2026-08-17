@@ -1,10 +1,14 @@
 ﻿# 새 글 뼈대를 만든다.
 #
 #   .\post.ps1 week-3 "W3 회고 - 자바 입문을 끝냈다" WIL
+#   .\post.ps1 week1-essay "WEEK 1. 에세이" WIL 정글 -Date 2026-03-07
+#                                           ↑상위 ↑하위      ↑원본 날짜
 #
-# 이 스크립트가 막아주는 것 두 가지 (둘 다 실제로 겪은 사고다)
-#   1) date 를 미래로 적으면 글이 아예 안 올라간다  -> 항상 「지금」을 박는다
+# 이 스크립트가 막아주는 것 (전부 실제로 겪었거나 겪을 뻔한 사고다)
+#   1) date 를 미래로 적으면 글이 아예 안 올라간다  -> 미래 날짜를 거부한다
 #   2) 파일명에 한글을 쓰면 주소가 깨진다            -> 영문 슬러그만 받는다
+#   3) 상위와 하위에 같은 이름을 쓰면 사이드바에서 그 줄이 사라졌다 나타났다 한다
+#      -> 같은 이름이거나 하위에 상위 이름을 쓰면 멈춘다
 
 [CmdletBinding()]
 param(
@@ -15,12 +19,20 @@ param(
     [string]$Title,
 
     [Parameter(Position = 2)]
-    [string]$Category = 'WIL'
+    [string]$Category = 'WIL',
+
+    # 하위 분류 (선택). 주면 categories: [상위, 하위] 가 된다.
+    [Parameter(Position = 3)]
+    [string]$SubCategory,
+
+    # 원본 날짜 (선택, YYYY-MM-DD). 티스토리 글을 옮길 때 쓴다. 과거만 받는다.
+    [string]$Date
 )
 
 $ErrorActionPreference = 'Stop'
 
 # 카테고리는 여섯 개뿐이다. 늘리면 사이드바가 목록이 되어버린다.
+# 이 검사는 상위에만 건다 — 하위는 「필요해지면 그때 붙인다」로 정해뒀다.
 $AllowedCategories = @('WIL', 'Java', 'Spring', '프로젝트', 'CS', '회고')
 
 # --- 1. 슬러그 검사 (영문 소문자 / 숫자 / 하이픈) ---------------------------
@@ -33,7 +45,7 @@ if ($Slug -notmatch '^[a-z0-9]+(-[a-z0-9]+)*$') {
     exit 1
 }
 
-# --- 2. 카테고리 검사 -------------------------------------------------------
+# --- 2. 분류 검사 -----------------------------------------------------------
 if ($AllowedCategories -notcontains $Category) {
     Write-Host ""
     Write-Host "'$Category' 는 정해둔 카테고리가 아닙니다." -ForegroundColor Red
@@ -42,10 +54,65 @@ if ($AllowedCategories -notcontains $Category) {
     exit 1
 }
 
-# --- 3. 경로 만들기 ---------------------------------------------------------
-$now      = Get-Date
+if ($SubCategory -and $SubCategory -eq $Category) {
+    Write-Host ""
+    Write-Host "상위와 하위가 같습니다: '$Category'" -ForegroundColor Red
+    Write-Host "  하위를 안 쓰려면 네 번째 인자를 아예 빼세요."
+    Write-Host ""
+    exit 1
+}
+
+if ($SubCategory -and $AllowedCategories -contains $SubCategory) {
+    Write-Host ""
+    Write-Host "'$SubCategory' 는 상위 분류 이름입니다. 하위로는 쓸 수 없습니다." -ForegroundColor Red
+    Write-Host "  같은 이름을 상위와 하위에 섞으면 사이드바에서 그 줄이 사라졌다 나타났다 합니다."
+    Write-Host "  Chirpy 가 「그 이름의 가장 최근 글이 상위로 썼는가」로 판단하기 때문입니다."
+    Write-Host ""
+    exit 1
+}
+
+# --- 3. 날짜 정하기 ---------------------------------------------------------
+# 미래 날짜면 Jekyll 이 발행을 미뤄서 글이 사라진 것처럼 보인다. 그래서 과거만 받는다.
+$now = Get-Date
+
+if ($Date) {
+    $parsed = [datetime]::MinValue
+    $ok = [datetime]::TryParseExact(
+        $Date, 'yyyy-MM-dd',
+        [System.Globalization.CultureInfo]::InvariantCulture,
+        [System.Globalization.DateTimeStyles]::None,
+        [ref]$parsed
+    )
+
+    if (-not $ok) {
+        Write-Host ""
+        Write-Host "날짜 형식이 아닙니다: '$Date'" -ForegroundColor Red
+        Write-Host "  YYYY-MM-DD 로 쓰세요. 예) -Date 2026-03-07"
+        Write-Host ""
+        exit 1
+    }
+
+    if ($parsed.Date -gt $now.Date) {
+        Write-Host ""
+        Write-Host "미래 날짜입니다: '$Date'" -ForegroundColor Red
+        Write-Host "  Jekyll 은 미래 글을 발행하지 않습니다. 빌드는 되는데 글만 안 보입니다."
+        Write-Host "  오늘($($now.ToString('yyyy-MM-dd'))) 이거나 그 이전만 됩니다."
+        Write-Host ""
+        exit 1
+    }
+
+    # 원본 글에는 시각 정보가 없으니 오전 10시로 둔다.
+    # 다만 오늘 날짜를 준 경우 10시가 아직 안 됐을 수 있으므로 지금 시각으로 눌러둔다.
+    $stamp = $parsed.Date.AddHours(10)
+    if ($stamp -gt $now) { $stamp = $now }
+}
+else {
+    $stamp = $now
+}
+
+# --- 4. 경로 만들기 ---------------------------------------------------------
 $postsDir = Join-Path $PSScriptRoot '_posts'
-$fileName = "{0}-{1}.md" -f $now.ToString('yyyy-MM-dd'), $Slug
+$fileName = "{0}-{1}.md" -f $stamp.ToString('yyyy-MM-dd'), $Slug
 $path     = Join-Path $postsDir $fileName
 
 if (-not (Test-Path $postsDir)) {
@@ -62,9 +129,34 @@ if (Test-Path $path) {
     exit 1
 }
 
-# --- 4. 내용 만들기 ---------------------------------------------------------
-# date 는 「지금」. 미래로 적으면 Jekyll 이 발행을 미뤄서 글이 사라진 것처럼 보인다.
-$date = $now.ToString('yyyy-MM-dd HH:mm:ss') + ' +0900'
+# 이미 쓰고 있는 하위 분류를 모은다. 막지는 않고 오타가 눈에 보이게만 한다.
+$existingSubs = @()
+Get-ChildItem $postsDir -Filter '*.md' -ErrorAction SilentlyContinue | ForEach-Object {
+    foreach ($line in (Get-Content $_.FullName -TotalCount 10 -Encoding UTF8)) {
+        if ($line -match '^categories:\s*\[\s*[^,\]]+\s*,\s*([^\]]+?)\s*\]') {
+            $existingSubs += $matches[1]
+        }
+    }
+}
+$existingSubs = @($existingSubs | Sort-Object -Unique)
+
+if ($SubCategory -and $existingSubs.Count -gt 0 -and $existingSubs -notcontains $SubCategory) {
+    Write-Host ""
+    Write-Host "'$SubCategory' 는 처음 쓰는 하위 분류입니다." -ForegroundColor Yellow
+    Write-Host "  이미 쓰고 있는 것: $($existingSubs -join ' / ')"
+    Write-Host "  오타가 아니라면 그대로 두세요. 새 하위 분류가 만들어집니다."
+    Write-Host ""
+}
+
+# --- 5. 내용 만들기 ---------------------------------------------------------
+$date = $stamp.ToString('yyyy-MM-dd HH:mm:ss') + ' +0900'
+
+if ($SubCategory) {
+    $categoryLine = "[$Category, $SubCategory]"
+}
+else {
+    $categoryLine = "[$Category]"
+}
 
 if ($Category -eq 'WIL') {
     $body = @"
@@ -92,7 +184,7 @@ $content = @"
 ---
 title: $Title
 date: $date
-categories: [$Category]
+categories: $categoryLine
 tags: []
 ---
 
@@ -108,8 +200,11 @@ Write-Host ""
 Write-Host "만들었습니다" -ForegroundColor Green
 Write-Host "  $path"
 Write-Host "  제목: $Title"
-Write-Host "  분류: $Category"
+Write-Host "  분류: $categoryLine"
 Write-Host "  날짜: $date"
+if ($Date) {
+    Write-Host "        (원본 날짜로 올립니다 — 홈 맨 위가 아니라 그 날짜 자리에 들어갑니다)" -ForegroundColor DarkGray
+}
 Write-Host ""
 Write-Host "글을 다 쓰면:  .\publish.ps1" -ForegroundColor Cyan
 Write-Host ""
