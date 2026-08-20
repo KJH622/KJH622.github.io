@@ -1,5 +1,5 @@
 ---
-title: WEEK 2. 컴퓨팅 사고로의 전환
+title: WEEK 2. 컴퓨팅 사고로의 전환 - 백트래킹
 date: 2026-03-12 10:00:00 +0900
 categories: [Krafton-Jungle, WEEK]
 tags: [크래프톤 정글, WIL, 회고, 알고리즘]
