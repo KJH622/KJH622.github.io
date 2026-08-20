@@ -32,10 +32,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# 카테고리는 일곱 개뿐이다. 늘리면 사이드바가 목록이 되어버린다.
+# 카테고리는 여덟 개뿐이다. 늘리면 사이드바가 목록이 되어버린다.
 # 이 검사는 상위에만 건다 — 하위는 「필요해지면 그때 붙인다」로 정해뒀다.
 # Krafton-Jungle 은 20편에서 멈추는 아카이브라 예외로 뒀다 (2026-08-17 추가).
-$AllowedCategories = @('WIL', 'Java', 'Spring', '프로젝트', 'CS', '회고', 'Krafton-Jungle')
+$AllowedCategories = @('WIL', 'Java', 'Spring', '프로젝트', 'CS', '회고', 'Krafton-Jungle', '자격증')
 
 # --- 1. 슬러그 검사 (영문 소문자 / 숫자 / 하이픈) ---------------------------
 if ($Slug -notmatch '^[a-z0-9]+(-[a-z0-9]+)*$') {
