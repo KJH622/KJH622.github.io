@@ -190,3 +190,43 @@
     }
   }
 }
+
+/* ── 사이드바 방문자 수 (2026-08-22) ─────────────────────────────
+   같이 봐야 하는 곳: _includes/sidebar.html 의 「방문자 수」 블록
+   숫자를 못 받아오면 sidebar.html 이 hidden 을 유지하므로 여기선 신경 쓰지 않는다. */
+#sidebar .sidebar-visitors {
+  padding: 0.55rem 1rem 0.2rem;
+  margin-top: 0.35rem;
+  border-top: 1px solid var(--sidebar-border-color, rgba(128, 128, 128, 0.2));
+
+  .sv-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .sv-label {
+    font-size: 0.75rem;
+    color: var(--sidebar-muted-color);
+    white-space: nowrap;
+  }
+
+  .sv-total {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--sidebar-active-color, var(--text-color));
+    letter-spacing: 0.01em;
+  }
+
+  .sv-sub {
+    margin-top: 0.1rem;
+    gap: 0.6rem;
+    justify-content: flex-end;
+
+    b {
+      font-weight: 600;
+      color: var(--sidebar-active-color, var(--text-color));
+      margin-left: 0.2rem;
+    }
+  }
+}

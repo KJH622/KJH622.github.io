@@ -150,6 +150,27 @@
     </ul>
     <!-- ▲ 분류 목록 끝 -->
 
+    <!-- ▼ 방문자 수 (2026-08-22 추가)
+      GoatCounter 의 공개 카운터를 읽어온다.  https://kjh622.goatcounter.com/counter/TOTAL.json
+      - 응답이 최대 4시간 캐시된다. 「오늘」이 즉시 안 움직이는 것은 GoatCounter 쪽 사양이다.
+      - 숫자를 하나도 못 받아오면 블록을 통째로 숨긴다 (깨진 값이 남지 않게).
+      같이 봐야 하는 곳: assets/css/jekyll-theme-chirpy.scss 의 .sidebar-visitors 블록
+    -->
+    {% if site.analytics.goatcounter.id %}
+      <div class="sidebar-visitors" id="sb-visitors" hidden
+           data-gc="{{ site.analytics.goatcounter.id }}">
+        <div class="sv-row">
+          <span class="sv-label">전체</span>
+          <span class="sv-total" id="sv-total">–</span>
+        </div>
+        <div class="sv-row sv-sub">
+          <span class="sv-label">오늘 <b id="sv-today">–</b></span>
+          <span class="sv-label">어제 <b id="sv-yday">–</b></span>
+        </div>
+      </div>
+    {% endif %}
+    <!-- ▲ 방문자 수 끝 -->
+
     <ul class="nav sidebar-menu">
       <li class="nav-item sidebar-section-label">
         <span>메뉴</span>
@@ -278,3 +299,42 @@
   <!-- .sidebar-bottom -->
 </aside>
 <!-- #sidebar -->
+
+{% if site.analytics.goatcounter.id %}
+  <script>
+    /* 방문자 수 — GoatCounter 공개 카운터에서 읽어온다 (2026-08-22)
+       셋 다 실패하면 블록을 계속 숨긴 채로 둔다. 하나라도 오면 보여준다. */
+    (function () {
+      var box = document.getElementById('sb-visitors');
+      if (!box) return;
+      var base = 'https://' + box.dataset.gc + '.goatcounter.com/counter/TOTAL.json';
+
+      function ymd(d) {
+        return d.getFullYear() + '-' +
+               String(d.getMonth() + 1).padStart(2, '0') + '-' +
+               String(d.getDate()).padStart(2, '0');
+      }
+      var today = ymd(new Date());
+      var yday  = ymd(new Date(Date.now() - 86400000));
+
+      function get(qs) {
+        return fetch(base + (qs ? '?' + qs : ''), { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) { return j ? j.count : null; })
+          .catch(function () { return null; });
+      }
+
+      Promise.all([
+        get(''),
+        get('start=' + today),
+        get('start=' + yday + '&end=' + yday)
+      ]).then(function (v) {
+        if (v[0] === null && v[1] === null && v[2] === null) return; /* 숨긴 채로 */
+        document.getElementById('sv-total').textContent = v[0] === null ? '–' : v[0];
+        document.getElementById('sv-today').textContent = v[1] === null ? '–' : v[1];
+        document.getElementById('sv-yday').textContent  = v[2] === null ? '–' : v[2];
+        box.hidden = false;
+      });
+    })();
+  </script>
+{% endif %}
