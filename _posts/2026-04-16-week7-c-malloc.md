@@ -1,5 +1,5 @@
 ---
-title: WEEK 7. 탐험 준비 - C - malloc 구현
+title: WEEK 7. 탐험 준비 - C malloc 구현
 date: 2026-04-16 10:00:00 +0900
 categories: [Krafton-Jungle, WEEK]
 tags: [크래프톤 정글, WIL, 회고, C, malloc]
