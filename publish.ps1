@@ -15,7 +15,55 @@ param(
 $ErrorActionPreference = 'Stop'
 $repo = $PSScriptRoot
 
-# --- 1. 올릴 게 있는지 ------------------------------------------------------
+# --- 1. 이미지 검사 ---------------------------------------------------------
+# Jekyll 은 _ 로 시작하는 폴더의 파일을 _site 로 복사하지 않는다.
+# 그래서 _posts 에 둔 이미지는 사이트에 안 올라가고, CI 의 htmlproofer 가
+# 없는 이미지를 잡아 빌드를 통째로 실패시킨다. 2026-08 에 네 번 겪었다.
+$postsDir = Join-Path $repo '_posts'
+$imgExt   = '^\.(png|jpg|jpeg|gif|webp|svg)$'
+
+$stray = @(Get-ChildItem $postsDir -File -ErrorAction SilentlyContinue |
+           Where-Object { $_.Extension -match $imgExt })
+
+if ($stray.Count -gt 0) {
+    Write-Host ""
+    Write-Host "_posts 에 이미지가 있습니다. 여기 두면 빌드가 깨집니다." -ForegroundColor Red
+    $stray | ForEach-Object { Write-Host "  _posts\$($_.Name)" }
+    Write-Host ""
+    Write-Host "  Jekyll 은 _ 로 시작하는 폴더의 파일을 사이트로 복사하지 않습니다."
+    Write-Host "  assets\img\ 로 옮기고 본문 경로도 같이 고치세요."
+    Write-Host ""
+    Write-Host "  예)  Move-Item _posts\$($stray[0].Name) assets\img\week7-kpt.png" -ForegroundColor Cyan
+    Write-Host "       ![설명](/assets/img/week7-kpt.png)" -ForegroundColor Cyan
+    Write-Host ""
+    exit 1
+}
+
+# 글이 가리키는 그림이 실제로 있는지도 본다.
+# 확장자만 틀려도(.png 로 적고 파일은 .jpg) 빌드가 깨진다. 이것도 실제로 겪었다.
+$missing = @()
+Get-ChildItem $postsDir -Filter '*.md' -File -ErrorAction SilentlyContinue | ForEach-Object {
+    $md   = $_
+    $text = Get-Content $md.FullName -Raw -Encoding UTF8
+    foreach ($m in [regex]::Matches($text, '\((/assets/[^)\s]+)\)')) {
+        $ref  = $m.Groups[1].Value
+        # 윈도우는 경로에 / 도 그대로 받으므로 구분자를 바꿀 필요가 없다
+        $full = Join-Path $repo $ref.TrimStart('/')
+        if (-not (Test-Path $full)) { $missing += "$($md.Name)  ->  $ref" }
+    }
+}
+
+if ($missing.Count -gt 0) {
+    Write-Host ""
+    Write-Host "글이 가리키는 그림이 없습니다. 이대로 올리면 빌드가 실패합니다." -ForegroundColor Red
+    $missing | ForEach-Object { Write-Host "  $_" }
+    Write-Host ""
+    Write-Host "  파일 이름과 확장자가 본문과 똑같은지 확인하세요."
+    Write-Host ""
+    exit 1
+}
+
+# --- 2. 올릴 게 있는지 ------------------------------------------------------
 $status = git -C $repo status --porcelain
 if (-not $status) {
     Write-Host ""
@@ -28,7 +76,7 @@ Write-Host ""
 Write-Host "바뀐 파일" -ForegroundColor Cyan
 $status | ForEach-Object { Write-Host "  $_" }
 
-# --- 2. 커밋 메시지 ---------------------------------------------------------
+# --- 3. 커밋 메시지 ---------------------------------------------------------
 if (-not $Message) {
     # 새로 생긴(A/??) _posts 파일의 title 을 읽어 메시지를 만든다
     $newPost = $status |
@@ -57,7 +105,7 @@ if (-not $Message) {
 Write-Host ""
 Write-Host "커밋 메시지: $Message" -ForegroundColor Cyan
 
-# --- 3. add / commit / push -------------------------------------------------
+# --- 4. add / commit / push -------------------------------------------------
 # 한글 커밋 메시지가 깨지지 않도록 임시 파일로 넘긴다
 git -C $repo add -A
 if ($LASTEXITCODE -ne 0) { Write-Host "git add 실패" -ForegroundColor Red; exit 1 }
