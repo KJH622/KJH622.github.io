@@ -195,10 +195,14 @@
    같이 봐야 하는 곳: _includes/sidebar.html 의 「방문자 수」 블록
    숫자를 못 받아오면 sidebar.html 이 hidden 을 유지하므로 여기선 신경 쓰지 않는다. */
 #sidebar .sidebar-visitors {
-  /* 홈 위에 있으므로 구분선은 아래쪽에 둔다 (2026-08-22 위치 변경) */
-  padding: 0.2rem 1rem 0.55rem;
-  margin-bottom: 0.35rem;
-  border-bottom: 1px solid var(--sidebar-border-color, rgba(128, 128, 128, 0.2));
+  /* 홈 위에 있으므로 구분선은 아래쪽에 둔다 (2026-08-22 위치 변경)
+
+     선 색을 --sidebar-border-color 로 두면 안 보인다.
+     그 변수가 다크에서 #292929 인데 사이드바 배경이 #1e1e1e 라 거의 같은 색이다.
+     그래서 배경 위에 반투명 회색을 얹는다 — 다크·라이트 양쪽에서 같은 정도로 보인다. */
+  padding: 0.2rem 1rem 0.6rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.28);
 
   .sv-row {
     display: flex;
