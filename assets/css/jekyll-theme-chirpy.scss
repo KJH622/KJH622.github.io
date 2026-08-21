@@ -195,9 +195,10 @@
    같이 봐야 하는 곳: _includes/sidebar.html 의 「방문자 수」 블록
    숫자를 못 받아오면 sidebar.html 이 hidden 을 유지하므로 여기선 신경 쓰지 않는다. */
 #sidebar .sidebar-visitors {
-  padding: 0.55rem 1rem 0.2rem;
-  margin-top: 0.35rem;
-  border-top: 1px solid var(--sidebar-border-color, rgba(128, 128, 128, 0.2));
+  /* 홈 위에 있으므로 구분선은 아래쪽에 둔다 (2026-08-22 위치 변경) */
+  padding: 0.2rem 1rem 0.55rem;
+  margin-bottom: 0.35rem;
+  border-bottom: 1px solid var(--sidebar-border-color, rgba(128, 128, 128, 0.2));
 
   .sv-row {
     display: flex;

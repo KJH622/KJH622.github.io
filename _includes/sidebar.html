@@ -31,6 +31,34 @@
   <!-- .profile-wrapper -->
 
   <nav class="flex-column flex-grow-1 w-100 ps-0">
+    <!-- ▼ 방문자 수 (2026-08-22)
+      Cloudflare Worker 에서 읽어온다.  https://counter.kjh622.workers.dev
+      코드는 이 저장소의 counter/ 폴더에 있다 (Jekyll exclude 로 사이트에는 안 올라간다).
+
+      왜 GoatCounter 를 안 쓰나
+        GoatCounter 공개 카운터는 응답을 최대 4시간 캐시해서 「오늘」이 안 움직였다.
+        이건 cache-control: no-store 라 실시간이다.
+        GoatCounter 는 글별 조회수·유입 통계용으로 그대로 두고 있다.
+
+      무엇을 세나
+        페이지마다가 아니라 하루에 한 사람 한 번. 티스토리의 「방문자 수」와 같은 뜻이다.
+        「오늘 이미 셌는지」는 localStorage 가 기억한다. 서버에는 아무것도 안 남긴다.
+
+      같이 봐야 하는 곳: assets/css/jekyll-theme-chirpy.scss 의 .sidebar-visitors
+    -->
+    <div class="sidebar-visitors" id="sb-visitors" hidden
+         data-endpoint="https://counter.kjh622.workers.dev">
+      <div class="sv-row">
+        <span class="sv-label">전체</span>
+        <span class="sv-total" id="sv-total">–</span>
+      </div>
+      <div class="sv-row sv-sub">
+        <span class="sv-label">오늘 <b id="sv-today">–</b></span>
+        <span class="sv-label">어제 <b id="sv-yday">–</b></span>
+      </div>
+    </div>
+    <!-- ▲ 방문자 수 끝 -->
+
     <ul class="nav">
       <!-- home -->
       <li class="nav-item{% if page.layout == 'home' %}{{ " active" }}{% endif %}">
@@ -150,33 +178,6 @@
     </ul>
     <!-- ▲ 분류 목록 끝 -->
 
-    <!-- ▼ 방문자 수 (2026-08-22)
-      Cloudflare Worker 에서 읽어온다.  https://counter.kjh622.workers.dev
-      코드는 이 저장소의 counter/ 폴더에 있다 (Jekyll exclude 로 사이트에는 안 올라간다).
-
-      왜 GoatCounter 를 안 쓰나
-        GoatCounter 공개 카운터는 응답을 최대 4시간 캐시해서 「오늘」이 안 움직였다.
-        이건 cache-control: no-store 라 실시간이다.
-        GoatCounter 는 글별 조회수·유입 통계용으로 그대로 두고 있다.
-
-      무엇을 세나
-        페이지마다가 아니라 하루에 한 사람 한 번. 티스토리의 「방문자 수」와 같은 뜻이다.
-        「오늘 이미 셌는지」는 localStorage 가 기억한다. 서버에는 아무것도 안 남긴다.
-
-      같이 봐야 하는 곳: assets/css/jekyll-theme-chirpy.scss 의 .sidebar-visitors
-    -->
-    <div class="sidebar-visitors" id="sb-visitors" hidden
-         data-endpoint="https://counter.kjh622.workers.dev">
-      <div class="sv-row">
-        <span class="sv-label">전체</span>
-        <span class="sv-total" id="sv-total">–</span>
-      </div>
-      <div class="sv-row sv-sub">
-        <span class="sv-label">오늘 <b id="sv-today">–</b></span>
-        <span class="sv-label">어제 <b id="sv-yday">–</b></span>
-      </div>
-    </div>
-    <!-- ▲ 방문자 수 끝 -->
 
     <ul class="nav sidebar-menu">
       <li class="nav-item sidebar-section-label">
