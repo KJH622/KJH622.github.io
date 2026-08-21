@@ -1,0 +1,17 @@
+{
+  // 블로그 사이드바 방문자 수 Worker
+  // 배포:  cd counter  →  npx wrangler deploy
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "counter",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-21",
+  "observability": {
+    "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "COUNTER",
+      "id": "3ec4c52a189b4d6d9fbbcbf4418d11f5"
+    }
+  ]
+}

@@ -227,6 +227,7 @@ exclude:
   - "package*.json"
   - post.ps1
   - publish.ps1
+  - counter # 방문자 수 Worker (Cloudflare). 사이트에 올라가면 안 된다
 
 jekyll-archives:
   enabled: [categories, tags]
