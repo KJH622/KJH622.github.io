@@ -8,7 +8,7 @@ mermaid: true
 
 ![Krafton-Jungle](/assets/img/krafton-jungle.png)
 
-> 크래프톤 정글 기간에 쓴 글을 2026-08-21에 다시 정리했다.
+> 크래프톤 정글 기간에 쓴 글을 2026-08-23에 다시 정리했다.
 {: .prompt-info }
 
 ## 이번 주 목표
